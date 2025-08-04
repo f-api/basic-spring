@@ -1,4 +1,4 @@
-package com.basicschedule.controller;
+package com.basicschedule.common;
 
 import com.basicschedule.dto.ErrorResponse;
 import org.springframework.http.HttpStatus;
