@@ -1,9 +1,9 @@
 package com.basicschedule.service;
 
-import com.basicschedule.dto.ScheduleResponse;
-import com.basicschedule.dto.ScheduleSaveRequest;
-import com.basicschedule.dto.ScheduleSaveResponse;
+import com.basicschedule.dto.*;
+import com.basicschedule.entity.Comment;
 import com.basicschedule.entity.Schedule;
+import com.basicschedule.repository.CommentRepository;
 import com.basicschedule.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,12 +12,14 @@ import org.springframework.util.ObjectUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ScheduleService {
 
     private final ScheduleRepository scheduleRepository;
+    private final CommentRepository commentRepository;
 
     @Transactional
     public ScheduleSaveResponse save(ScheduleSaveRequest request) {
@@ -39,13 +41,13 @@ public class ScheduleService {
     }
 
     @Transactional(readOnly = true)
-    public List<ScheduleResponse> findSchedules(String author) {
+    public List<ScheduleGetOneResponse> findSchedules(String author) {
         List<Schedule> schedules = scheduleRepository.findAll();
-        List<ScheduleResponse> dtos = new ArrayList<>();
+        List<ScheduleGetOneResponse> dtos = new ArrayList<>();
 
         if (author == null) {
             for (Schedule schedule : schedules) {
-                ScheduleResponse scheduleResponse = new ScheduleResponse(
+                ScheduleGetOneResponse scheduleGetOneResponse = new ScheduleGetOneResponse(
                         schedule.getId(),
                         schedule.getTitle(),
                         schedule.getContent(),
@@ -53,13 +55,13 @@ public class ScheduleService {
                         schedule.getCreatedAt(),
                         schedule.getModifiedAt()
                 );
-                dtos.add(scheduleResponse);
+                dtos.add(scheduleGetOneResponse);
             }
             return dtos;
         }
         for (Schedule schedule : schedules) {
             if (author.equals(schedule.getAuthor())) {
-                ScheduleResponse scheduleResponse = new ScheduleResponse(
+                ScheduleGetOneResponse scheduleGetOneResponse = new ScheduleGetOneResponse(
                         schedule.getId(),
                         schedule.getTitle(),
                         schedule.getContent(),
@@ -67,7 +69,7 @@ public class ScheduleService {
                         schedule.getCreatedAt(),
                         schedule.getModifiedAt()
                 );
-                dtos.add(scheduleResponse);
+                dtos.add(scheduleGetOneResponse);
             }
         }
         return dtos;
@@ -103,22 +105,29 @@ public class ScheduleService {
     }
 
     @Transactional(readOnly = true)
-    public ScheduleResponse findSchedule(long scheduleId) {
+    public ScheduleGetAllResponse findSchedule(long scheduleId) {
         Schedule schedule = scheduleRepository.findById(scheduleId).orElseThrow(
                 () -> new IllegalArgumentException("Schedule not found")
         );
-        return new ScheduleResponse(
+        
+        List<Comment> comments = commentRepository.findByScheduleId(scheduleId);
+        List<CommentResponse> commentResponses = comments.stream()
+                .map(CommentResponse::new)
+                .collect(Collectors.toList());
+        
+        return new ScheduleGetAllResponse(
                 schedule.getId(),
                 schedule.getTitle(),
                 schedule.getContent(),
                 schedule.getAuthor(),
                 schedule.getCreatedAt(),
-                schedule.getModifiedAt()
+                schedule.getModifiedAt(),
+                commentResponses
         );
     }
 
     @Transactional
-    public ScheduleResponse updateSchedule(long scheduleId, ScheduleSaveRequest request) {
+    public ScheduleGetOneResponse updateSchedule(long scheduleId, ScheduleSaveRequest request) {
         Schedule schedule = scheduleRepository.findById(scheduleId).orElseThrow(
                 () -> new IllegalArgumentException("Schedule not found")
         );
@@ -126,7 +135,7 @@ public class ScheduleService {
            throw new IllegalStateException("Password doesn't match");
         }
         schedule.updateTitleAndAuthor(request.getTitle(), request.getAuthor());
-        return new ScheduleResponse(
+        return new ScheduleGetOneResponse(
                 schedule.getId(),
                 schedule.getTitle(),
                 schedule.getContent(),

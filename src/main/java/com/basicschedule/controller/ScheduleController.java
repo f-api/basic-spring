@@ -1,6 +1,7 @@
 package com.basicschedule.controller;
 
-import com.basicschedule.dto.ScheduleResponse;
+import com.basicschedule.dto.ScheduleGetAllResponse;
+import com.basicschedule.dto.ScheduleGetOneResponse;
 import com.basicschedule.dto.ScheduleSaveRequest;
 import com.basicschedule.dto.ScheduleSaveResponse;
 import com.basicschedule.service.ScheduleService;
@@ -24,21 +25,21 @@ public class ScheduleController {
     }
 
     @GetMapping("/schedules")
-    public ResponseEntity<List<ScheduleResponse>> getSchedules(
-            @RequestParam String author
+    public ResponseEntity<List<ScheduleGetOneResponse>> getSchedules(
+            @RequestParam(required = false) String author
     ) {
         return ResponseEntity.ok(scheduleService.findSchedules(author));
     }
 
     @GetMapping("/schedules/{scheduleId}")
-    public ResponseEntity<ScheduleResponse> getSchedules(
+    public ResponseEntity<ScheduleGetAllResponse> getSchedules(
             @PathVariable long scheduleId
     ) {
         return ResponseEntity.ok(scheduleService.findSchedule(scheduleId));
     }
 
     @PutMapping("/schedules/{scheduleId}")
-    public ResponseEntity<ScheduleResponse> updateSchedule(
+    public ResponseEntity<ScheduleGetOneResponse> updateSchedule(
             @PathVariable long scheduleId,
             @RequestBody ScheduleSaveRequest request
     ) {
