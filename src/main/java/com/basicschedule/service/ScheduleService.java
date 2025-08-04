@@ -23,6 +23,26 @@ public class ScheduleService {
 
     @Transactional
     public ScheduleSaveResponse save(ScheduleSaveRequest request) {
+        if (request.getAuthor() == null) {
+            throw new IllegalStateException("작성자명은 필수값입니다.");
+        }
+        if (request.getPassword() == null) {
+            throw new IllegalStateException("비밀번호는 필수값입니다.");
+        }
+        if (request.getTitle() == null) {
+            throw new IllegalStateException("일정 제목은 필수값입니다.");
+        }
+        if (request.getContent() == null) {
+            throw new IllegalStateException("일정 내용은 필수값입니다.");
+        }
+
+        if (request.getTitle().length() > 30) {
+            throw new IllegalStateException("일정 제목은 최대 30자입니다.");
+        }
+        if (request.getContent().length() > 200) {
+            throw new IllegalStateException("일정 내용은 최대 200자입니다.");
+        }
+
         Schedule schedule = new Schedule(
                 request.getTitle(),
                 request.getContent(),
@@ -131,8 +151,8 @@ public class ScheduleService {
         Schedule schedule = scheduleRepository.findById(scheduleId).orElseThrow(
                 () -> new IllegalArgumentException("Schedule not found")
         );
-        if (ObjectUtils.nullSafeEquals(schedule.getPassword(), request.getPassword())) {
-           throw new IllegalStateException("Password doesn't match");
+        if (!ObjectUtils.nullSafeEquals(schedule.getPassword(), request.getPassword())) {
+           throw new IllegalStateException("비밀번호가 일치하지 않습니다.");
         }
         schedule.updateTitleAndAuthor(request.getTitle(), request.getAuthor());
         return new ScheduleGetOneResponse(
@@ -151,7 +171,7 @@ public class ScheduleService {
                 () -> new IllegalArgumentException("Schedule not found")
         );
         if (!ObjectUtils.nullSafeEquals(schedule.getPassword(), password)) {
-            throw new IllegalStateException("Password doesn't match");
+            throw new IllegalStateException("비밀번호가 일치하지 않습니다.");
         }
         scheduleRepository.deleteById(scheduleId);
     }
